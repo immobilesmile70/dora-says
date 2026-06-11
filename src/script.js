@@ -64,12 +64,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       ];
       for (let color of sfxFiles) {
         try {
-          const res = await fetch(`public/color_sounds/${color}.mp3`);
+          const res = await fetch(`${window.location.origin}/color_sounds/${color}.mp3`);
           const arrayBuffer = await res.arrayBuffer();
           this.sfxBuffers[color] = await this.ctx.decodeAudioData(arrayBuffer);
         } catch (e) {
           console.warn(
-            `Could not load SFX: public/color_sounds/${color}.mp3`,
+            `Could not load SFX: ${window.location.origin}/color_sounds/${color}.mp3`,
             e,
           );
         }
@@ -107,7 +107,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Swap source and fade in
       setTimeout(() => {
-        this.bgmElement.src = `public/music/${trackName}.mp3`;
+        this.bgmElement.src = `${window.location.origin}/music/${trackName}.mp3`;
         this.bgmElement
           .play()
           .catch((e) => console.warn("BGM Play prevented:", e));
@@ -163,7 +163,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // MODULAR SYSTEM 3: INSTRUCTIONS (Pre-baked TTS)
   // ==========================================
   const InstructionSystem = {
-    audio: new Audio("public/tts_intro.mp3"),
+    audio: new Audio(`${window.location.origin}/tts_intro.mp3`),
     isPlaying: false,
 
     // TWEAK THESE TIMES (in seconds) to match your specific tts_intro.mp3
