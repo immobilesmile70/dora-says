@@ -1,0 +1,15 @@
+{
+  "name": "dora-says",
+  "version": "1.0.0",
+  "description": "A small THREE.js game inspired by Simon Says, where players must memorize and repeat patterns displayed on screens.",
+  "license": "MIT",
+  "author": "RickByte",
+  "type": "module",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "vite": "^8.0.16"
+  }
+}

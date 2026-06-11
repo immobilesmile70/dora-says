@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"
+    />
+    <title>Dora Says</title>
+    <link rel="stylesheet" href="styles/style.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  </head>
+  <body>
+    <div id="game-container"></div>
+
+    <div id="hud" class="hidden">
+      <div id="crosshair">
+        <div id="interact-prompt" class="interaction hidden">
+          <div class="mobile-interact"><svg
+          viewBox="0 0 512.00 512.00"
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          fill="#000000"
+          stroke="#000000"
+          transform="matrix(1, 0, 0, 1, 0, 0)rotate(0)"
+        >
+          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+          <g
+            id="SVGRepo_tracerCarrier"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke="#CCCCCC"
+            stroke-width="4.096"
+          >
+            <title>point-up-filled</title>
+            <g id="Page-1" stroke-width="20.48" fill="none" fill-rule="evenodd">
+              <g
+                id="drop"
+                fill="#ffffff"
+                transform="translate(63.532715, 64.000000)"
+              >
+                <path
+                  d="M360.789541,405.333333 L360.789541,226.509804 L217.730718,178.823529 L217.730718,47.6862745 C217.730718,21.3498723 196.380845,0 170.044443,0 C143.708041,0 122.358169,21.3498723 122.358169,47.6862745 L122.358169,262.27451 L122.358169,262.27451 L86.5934628,229.490196 C66.3579904,210.941013 35.2995235,210.941013 15.064051,229.490196 C-3.84811554,246.826349 -5.12572722,276.211417 12.2104255,295.123584 C12.6650828,295.619574 13.1304626,296.105627 13.6062352,296.5814 L122.358169,405.333333 L122.358169,405.333333 L360.789541,405.333333 Z"
+                  id="Path-68"
+                ></path>
+              </g>
+            </g>
+          </g>
+          <g id="SVGRepo_iconCarrier">
+            <title>point-up-filled</title>
+            <g id="Page-1" stroke-width="20.48" fill="none" fill-rule="evenodd">
+              <g
+                id="drop"
+                fill="#ffffff"
+                transform="translate(63.532715, 64.000000)"
+              >
+                <path
+                  d="M360.789541,405.333333 L360.789541,226.509804 L217.730718,178.823529 L217.730718,47.6862745 C217.730718,21.3498723 196.380845,0 170.044443,0 C143.708041,0 122.358169,21.3498723 122.358169,47.6862745 L122.358169,262.27451 L122.358169,262.27451 L86.5934628,229.490196 C66.3579904,210.941013 35.2995235,210.941013 15.064051,229.490196 C-3.84811554,246.826349 -5.12572722,276.211417 12.2104255,295.123584 C12.6650828,295.619574 13.1304626,296.105627 13.6062352,296.5814 L122.358169,405.333333 L122.358169,405.333333 L360.789541,405.333333 Z"
+                  id="Path-68"
+                ></path>
+              </g>
+            </g>
+          </g>
+        </svg></div>
+          <div class="desktop-interact">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 256 256"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <!-- Rounded square -->
+              <rect
+                x="16"
+                y="16"
+                width="224"
+                height="224"
+                rx="48"
+                fill="none"
+                stroke="white"
+                stroke-width="16"
+              />
+
+              <!-- F -->
+              <path
+                d="M96 72V184
+       M96 72H176
+       M96 128H156"
+                fill="none"
+                stroke="white"
+                stroke-width="20"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div id="score-display">Score: <span id="score">0</span></div>
+      <div id="timeout-container">
+        <div id="timeout-bar"></div>
+      </div>
+    </div>
+
+    <div id="subtitle-container" class="hidden">
+        <span id="subtitle-text"></span>
+    </div>
+
+    <div id="controls-ui" class="hidden">
+      <div id="left-panel"></div>
+      <div id="right-panel"></div>
+      <button id="mobile-interact" class="action-btn">
+        <svg
+          viewBox="0 0 512.00 512.00"
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          fill="#000000"
+          stroke="#000000"
+          transform="matrix(1, 0, 0, 1, 0, 0)rotate(0)"
+        >
+          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+          <g
+            id="SVGRepo_tracerCarrier"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke="#CCCCCC"
+            stroke-width="4.096"
+          >
+            <title>point-up-filled</title>
+            <g id="Page-1" stroke-width="20.48" fill="none" fill-rule="evenodd">
+              <g
+                id="drop"
+                fill="#ffffff"
+                transform="translate(63.532715, 64.000000)"
+              >
+                <path
+                  d="M360.789541,405.333333 L360.789541,226.509804 L217.730718,178.823529 L217.730718,47.6862745 C217.730718,21.3498723 196.380845,0 170.044443,0 C143.708041,0 122.358169,21.3498723 122.358169,47.6862745 L122.358169,262.27451 L122.358169,262.27451 L86.5934628,229.490196 C66.3579904,210.941013 35.2995235,210.941013 15.064051,229.490196 C-3.84811554,246.826349 -5.12572722,276.211417 12.2104255,295.123584 C12.6650828,295.619574 13.1304626,296.105627 13.6062352,296.5814 L122.358169,405.333333 L122.358169,405.333333 L360.789541,405.333333 Z"
+                  id="Path-68"
+                ></path>
+              </g>
+            </g>
+          </g>
+          <g id="SVGRepo_iconCarrier">
+            <title>point-up-filled</title>
+            <g id="Page-1" stroke-width="20.48" fill="none" fill-rule="evenodd">
+              <g
+                id="drop"
+                fill="#ffffff"
+                transform="translate(63.532715, 64.000000)"
+              >
+                <path
+                  d="M360.789541,405.333333 L360.789541,226.509804 L217.730718,178.823529 L217.730718,47.6862745 C217.730718,21.3498723 196.380845,0 170.044443,0 C143.708041,0 122.358169,21.3498723 122.358169,47.6862745 L122.358169,262.27451 L122.358169,262.27451 L86.5934628,229.490196 C66.3579904,210.941013 35.2995235,210.941013 15.064051,229.490196 C-3.84811554,246.826349 -5.12572722,276.211417 12.2104255,295.123584 C12.6650828,295.619574 13.1304626,296.105627 13.6062352,296.5814 L122.358169,405.333333 L122.358169,405.333333 L360.789541,405.333333 Z"
+                  id="Path-68"
+                ></path>
+              </g>
+            </g>
+          </g>
+        </svg>
+      </button>
+      <button id="pauseBtn">||</button>
+    </div>
+
+    <div id="menu-panel" class="overlay">
+      <h1>DORA SAYS</h1>
+      <div class="controls-info">
+        <h3>Controls</h3>
+        <p>
+          <strong>Desktop:</strong> WASD to move, Mouse to look,
+          'F' to interact.
+        </p>
+        <p>
+          <strong>Mobile:</strong> Left Panel to move, Right Panel to look,
+          Button to interact.
+        </p>
+        <p>
+          <em>Watch the screens. Memorize the pattern. Press the buttons.</em>
+        </p>
+      </div>
+      <button id="playBtn">START GAME</button>
+    </div>
+
+    <div id="pause-panel" class="overlay hid">
+      <h1>PAUSED</h1>
+      <button id="resumeBtn">RESUME</button>
+      <button id="restartBtn">RESTART</button>
+    </div>
+
+    <div id="game-over-menu" class="overlay hid">
+      <h1>SYSTEM FAILURE</h1>
+      <h2>Final Score: <span id="final-score">0</span></h2>
+      <button id="retryBtn">RETRY</button>
+    </div>
+    <script type="module" src="src/script.js"></script>
+  </body>
+</html>
