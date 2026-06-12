@@ -194,9 +194,6 @@ body {
   .desktop-interact {
     display: block;
   }
-  #controls-ui {
-    display: none !important;
-  }
 }
 
 /* --- SUBTITLES --- */

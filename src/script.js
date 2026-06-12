@@ -1,240 +1,8 @@
+import SubtitleSystem from "./subtitles.js";
+import SoundManager from "./sound_manager.js";
+import InstructionSystem from "./intro.js";
+
 document.addEventListener("DOMContentLoaded", async () => {
-
-  // ==========================================
-  // MODULAR SYSTEM 1: SUBTITLES
-  // ==========================================
-  const SubtitleSystem = {
-    container: document.getElementById("subtitle-container"),
-    textEl: document.getElementById("subtitle-text"),
-    timeoutId: null,
-
-    show(text, duration = 0) {
-      this.container.classList.remove("hidden");
-      this.textEl.innerText = text;
-      if (this.timeoutId) clearTimeout(this.timeoutId);
-
-      if (duration > 0) {
-        this.timeoutId = setTimeout(() => this.hide(), duration);
-      }
-    },
-    hide() {
-      this.container.classList.add("hidden");
-      this.textEl.innerText = "";
-    },
-  };
-
-  // ==========================================
-  // MODULAR SYSTEM 2: SOUND MANAGER (Pre-baked MP3s)
-  // ==========================================
-  const SoundManager = {
-    ctx: null,
-    masterGain: null,
-    bgmGain: null,
-    sfxGain: null,
-
-    bgmElement: null,
-    bgmSource: null,
-    currentTrack: null,
-
-    sfxBuffers: {}, // Pre-loading buffers allows instant, overlapping rapid clicks
-    isInitialized: false,
-    isPaused: false,
-
-    async init() {
-      if (this.isInitialized) return;
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-
-      this.masterGain = this.ctx.createGain();
-      this.bgmGain = this.ctx.createGain();
-      this.sfxGain = this.ctx.createGain();
-
-      this.bgmGain.connect(this.masterGain);
-      this.sfxGain.connect(this.masterGain);
-      this.masterGain.connect(this.ctx.destination);
-
-      // 1. Preload SFX into memory for zero-latency playback
-      const sfxFiles = [
-        "red",
-        "green",
-        "blue",
-        "orange",
-        "pink",
-        "purple",
-        "yellow",
-      ];
-      for (let color of sfxFiles) {
-        try {
-          const res = await fetch(`${window.location.origin}/color_sounds/${color}.mp3`);
-          const arrayBuffer = await res.arrayBuffer();
-          this.sfxBuffers[color] = await this.ctx.decodeAudioData(arrayBuffer);
-        } catch (e) {
-          console.warn(
-            `Could not load SFX: ${window.location.origin}/color_sounds/${color}.mp3`,
-            e,
-          );
-        }
-      }
-
-      // 2. Setup BGM Element for streaming
-      this.bgmElement = new Audio();
-      this.bgmElement.loop = true;
-      this.bgmSource = this.ctx.createMediaElementSource(this.bgmElement);
-      this.bgmSource.connect(this.bgmGain);
-
-      this.isInitialized = true;
-    },
-
-    playSFX(colorName) {
-      if (!this.isInitialized || !this.sfxBuffers[colorName]) return;
-
-      // Creates a new voice for every click, preventing cut-offs on rapid clicking
-      const source = this.ctx.createBufferSource();
-      source.buffer = this.sfxBuffers[colorName];
-      source.connect(this.sfxGain);
-      source.start(0);
-    },
-
-    playBGM(trackName) {
-      if (!this.isInitialized) this.init();
-      if (this.currentTrack === trackName) return;
-
-      this.currentTrack = trackName;
-      this.isPaused = false;
-
-      // Fade out current track
-      this.bgmGain.gain.cancelScheduledValues(this.ctx.currentTime);
-      this.bgmGain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 1);
-
-      // Swap source and fade in
-      setTimeout(() => {
-        this.bgmElement.src = `${window.location.origin}/music/${trackName}.mp3`;
-        this.bgmElement
-          .play()
-          .catch((e) => console.warn("BGM Play prevented:", e));
-
-        this.bgmGain.gain.setValueAtTime(0.01, this.ctx.currentTime);
-        this.bgmGain.gain.linearRampToValueAtTime(
-          0.5,
-          this.ctx.currentTime + 2,
-        ); // Target volume 0.5
-      }, 1000);
-    },
-
-    pauseAll() {
-      if (!this.isInitialized || this.isPaused) return;
-      this.isPaused = true;
-
-      // Fade out master volume, then physically pause the BGM element
-      this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
-      this.masterGain.gain.linearRampToValueAtTime(
-        0.01,
-        this.ctx.currentTime + 0.5,
-      );
-      setTimeout(() => this.bgmElement.pause(), 500);
-    },
-
-    resumeAll() {
-      if (!this.isInitialized || !this.isPaused) return;
-      this.isPaused = false;
-
-      this.bgmElement.play();
-      this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
-      this.masterGain.gain.linearRampToValueAtTime(
-        1,
-        this.ctx.currentTime + 0.5,
-      );
-    },
-  };
-
-  // Initialize Audio on first user interaction anywhere to bypass browser autoplay blocks
-  document.body.addEventListener(
-    "pointerdown",
-    () => {
-      if (!SoundManager.isInitialized) {
-        SoundManager.init().then(() => {
-          SoundManager.playBGM("title_screen");
-        });
-      }
-    },
-    { once: true },
-  );
-
-  // ==========================================
-  // MODULAR SYSTEM 3: INSTRUCTIONS (Pre-baked TTS)
-  // ==========================================
-  const InstructionSystem = {
-    audio: new Audio(`${window.location.origin}/tts_intro.mp3`),
-    isPlaying: false,
-
-    // TWEAK THESE TIMES (in seconds) to match your specific tts_intro.mp3
-    subtitles: [
-      { time: 0.0, text: "Welcome to Dora Says." },
-      { time: 1.8, text: "WASD to move, mouse to look, and F to interact." },
-      {
-        time: 6.5,
-        text: "On mobile, use the left side to move, the right side to look, and the interact button to activate objects.",
-      },
-      {
-        time: 13.5,
-        text: "Watch the screens carefully and memorize the pattern they display. Then, repeat that pattern by pressing the buttons around you in the correct order.",
-      },
-      { time: 22.5, text: "Ready? Let's see how much you can remember." },
-      { time: 27.0, text: "" }, // Clears the text at the end
-    ],
-
-    async play() {
-      this.isPlaying = true;
-      this.audio.currentTime = 0;
-
-      try {
-        await this.audio.play();
-      } catch (e) {
-        console.warn("TTS Playback prevented", e);
-        return; // Fallback: just skip to game if audio fails
-      }
-
-      return new Promise((resolve) => {
-        const checkSubtitles = () => {
-          if (!this.isPlaying) return resolve();
-
-          const time = this.audio.currentTime;
-          let currentSub = "";
-
-          // Find the applicable subtitle based on current audio time
-          for (let i = 0; i < this.subtitles.length; i++) {
-            if (time >= this.subtitles[i].time) {
-              currentSub = this.subtitles[i].text;
-            }
-          }
-
-          if (currentSub) SubtitleSystem.show(currentSub);
-          else SubtitleSystem.hide();
-
-          if (this.audio.ended) {
-            SubtitleSystem.hide();
-            this.isPlaying = false;
-            resolve();
-          } else {
-            requestAnimationFrame(checkSubtitles);
-          }
-        };
-        checkSubtitles();
-      });
-    },
-
-    pause() {
-      this.audio.pause();
-    },
-    resume() {
-      if (this.isPlaying) this.audio.play();
-    },
-    cancel() {
-      this.isPlaying = false;
-      this.audio.pause();
-      SubtitleSystem.hide();
-    },
-  };
-
   // ==========================================
   // GAME LOGIC VARIABLES
   // ==========================================
@@ -243,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let screens = [];
   let intersectedObjects = [];
 
-  // Core Game Data (Updated with your 7 specific colors)
+  // Core Game Data
   const colorNames = [
     "red",
     "green",
@@ -280,6 +48,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     cameraRotationY = 0;
   let cameraDistance = 0.1,
     lookAtOffsetY = 1.2;
+
+  const isTouchScreen = window.matchMedia("(pointer: coarse)").matches;
 
   let activeJoystickTouchId = null;
   let moveDirection = { x: 0, z: 0 };
@@ -403,7 +173,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     isPaused = false;
     SoundManager.resumeAll();
     InstructionSystem.resume();
-    if (window.innerWidth >= 768) document.body.requestPointerLock();
+    if (!isTouchScreen) document.body.requestPointerLock();
   });
 
   restartBtn.addEventListener("click", () => {
@@ -421,7 +191,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         (gameState === "PLAYING" || gameState === "INSTRUCTIONS") &&
         !isPaused &&
         !isPointerLocked &&
-        window.innerWidth >= 768
+        !isTouchScreen
       ) {
         document.body.requestPointerLock();
       }
@@ -462,7 +232,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const sensitivity = 0.002;
     cameraRotationX -= event.movementX * sensitivity;
 
-    // FLIPPED: + instead of - to invert Y Axis
     cameraRotationY = clamp(
       cameraRotationY + event.movementY * sensitivity,
       -Math.PI / 2.5,
@@ -548,14 +317,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function startSimulation() {
-    if (window.innerWidth >= 768) document.body.requestPointerLock();
-    if (window.innerWidth < 768) controlsUi.classList.remove("hidden");
+    if (!isTouchScreen) document.body.requestPointerLock();
+
+    if (isTouchScreen) controlsUi.classList.remove("hidden");
+    else controlsUi.classList.add("hidden");
+
     hud.classList.remove("hidden");
 
-    // Init sounds if skipped the menu click
     await SoundManager.init();
     SoundManager.resumeAll();
-    SoundManager.playBGM("gameplay"); // Updated to gameplay.mp3
+    SoundManager.playBGM("gameplay");
 
     cylinder.position.set(0, 1, 0);
     cameraRotationX = 0;
@@ -568,13 +339,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     isPaused = false;
     score = 0;
     round = 1;
-    activeColors = 2; // Resets to first 2 colors
+    activeColors = 2;
     sequence = [];
     scoreEl.innerText = score;
 
     createButtons();
 
-    // Play Intro phase
     gameState = "INSTRUCTIONS";
     await InstructionSystem.play();
 
@@ -594,7 +364,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateTimeoutBar();
 
     if (round % 2 === 0 && activeColors < colorsPool.length) {
-      // Scales up slightly faster to hit all 7
       activeColors++;
       createButtons();
     }
@@ -613,11 +382,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       while (isPaused) {
         await sleep(100);
-      } // Wait gracefully if paused
+      }
 
       const colorIndex = sequence[i];
       const colorHex = colorsPool[colorIndex];
-      const colorString = colorNames[colorIndex].toUpperCase(); // E.g., "RED"
+      const colorString = colorNames[colorIndex].toUpperCase();
 
       SoundManager.playSFX(colorNames[colorIndex]);
       SubtitleSystem.show(colorString, 500);
@@ -640,7 +409,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       const hitButton = intersects[0].object;
       const chosenColorIndex = hitButton.userData.colorIndex;
 
-      // Audio & Visual Feedback
       SoundManager.playSFX(colorNames[chosenColorIndex]);
       SubtitleSystem.show(colorNames[chosenColorIndex].toUpperCase(), 500);
 
@@ -653,7 +421,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (chosenColorIndex === sequence[playerStep]) {
         playerStep++;
-        timeLeft = maxTime; // Reset timer on correct press
+        timeLeft = maxTime;
 
         if (playerStep === sequence.length) {
           score++;
@@ -671,7 +439,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     gameState = "GAME_OVER";
     isWaitingInput = false;
 
-    // Fade out music and reset elements
     SoundManager.masterGain.gain.linearRampToValueAtTime(
       0.01,
       SoundManager.ctx.currentTime + 1,
@@ -727,7 +494,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           const sensitivity = 2;
 
           cameraRotationX -= deltaX * 0.005 * sensitivity;
-          // FLIPPED: + instead of -
           cameraRotationY = clamp(
             cameraRotationY + deltaY * 0.01 * sensitivity,
             -Math.PI / 2.5,
@@ -818,7 +584,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // Desktop WASD movement
     if (!joystickActive) {
       let fwd = (keys.w ? 1 : 0) - (keys.s ? 1 : 0);
       let rgt = (keys.d ? 1 : 0) - (keys.a ? 1 : 0);
